@@ -1,0 +1,424 @@
+package Pac_Man;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+
+@SuppressWarnings({ "serial" })
+public class PacMan extends JFrame implements KeyListener {
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				new PacMan();
+			}
+		});
+	}
+	private static final int delay = 200, size = 30;
+	private static int[][] mapinit = new int[28][28];
+	private static final int blinky = 5, inky = 6, pinky = 7, clyde = 8, speed = 200/delay;
+	private static final boolean debug = true;
+	private boolean win, lose;
+	private int[][] map;
+	private int xv, yv, xloc, yloc, next, score, memx, memy, time;
+	private Ghost red, pink, blue, orange;
+	private final Location blinkyt, pinkyt, inkyt, clydet;
+	private Timer t;
+	public PacMan() {
+		pinkyt = new Location(0, 0);
+		blinkyt = new Location(27, 0);
+		inkyt  = new Location(28, 27);
+		clydet = new Location(27, 0);
+		score = time = 0;
+		lose = false;
+		win = true;
+		addKeyListener(this);
+		this.setTitle("Pac Man");
+		this.add(new Tile());
+		this.setBackground(Color.black);
+		ActionListener frame = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				update();
+				repaint();
+			}
+
+		};
+		red = new Ghost(13, 11, 27, 0, blinky, new Location(13, 12), blinkyt);
+		pink = new Ghost(13, 12, 0, 0, pinky, new Location(13, 13), pinkyt);
+		blue = new Ghost(12, 12, 28, 27, inky, new Location(12, 11), inkyt);
+		orange = new Ghost(13, 14, 0, 27, clyde, new Location(13, 15), clydet);
+		map = new int[28][28];
+		initMap();
+		this.setSize(size * map[0].length, size * (map.length + 4));
+		this.setVisible(true);
+		xloc = 13;
+		yloc = 21;
+		t = new Timer(delay, frame);
+		t.setActionCommand("Timer");
+		t.start();
+	}
+
+	private void initMap() {
+		mapinit[0] = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+		mapinit[1] = new int[] { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+		mapinit[2] = new int[] { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+		mapinit[3] = new int[] { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+		mapinit[4] = new int[] { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+		mapinit[5] = new int[] { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+		mapinit[6] = new int[] { 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+		mapinit[6] = new int[] { 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+		mapinit[7] = new int[] { 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1 };
+		mapinit[8] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[9] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[10] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[11] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 3, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[12] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 3, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[13] = new int[] { 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 1, 1, 1, 3, 1, 1, 1, 1, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3 };
+		mapinit[14] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 3, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[15] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 3, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[16] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[17] = new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1 };
+		mapinit[18] = new int[] { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+		mapinit[19] = new int[] { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+		mapinit[20] = new int[] { 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1 };
+		mapinit[21] = new int[] { 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1 };
+		mapinit[22] = new int[] { 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1 };
+		mapinit[23] = new int[] { 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1 };
+		mapinit[24] = new int[] { 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1 };
+		mapinit[25] = new int[] { 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1 };
+		mapinit[26] = new int[] { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+		mapinit[27] = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+		map = mapinit.clone();
+	}
+
+	public void update() {
+		if (!win || !lose) {
+			updatePacMan();
+			red.updateGhost(new Location(xloc, yloc));
+			pink.updateGhost(new Location(xloc + xv * 4, yloc + yv * 4));
+			blue.updateGhost(new Location((red.xloc - xloc + xv * 2) * 2, (red.yloc - yloc + yv * 2) * 2));
+			if (Math.sqrt(Math.pow((xloc - orange.xloc), 2) + Math.pow((yloc - orange.yloc), 2)) > 8)
+				orange.updateGhost(new Location(xloc, yloc));
+			else
+				orange.updateGhost(clydet);
+			time++;
+		}
+	}
+
+	private class Ghost {
+		private int xloc, yloc, type, xv, yv, replaced;
+		private Location target, prev, nextl, home;
+		public Ghost(int xloc, int yloc, int xt, int yt, int type, Location prev, Location home) {
+			this.xloc = xloc;
+			this.yloc = yloc;
+			this.type = type;
+			xv = 1;
+			yv = 0;
+			target = new Location(xt, yt);
+			nextl = new Location(xloc + xv, yloc + yv);
+			this.prev = prev;
+			this.home = home;
+			replaced = 3;
+		}
+		private void updateGhost(Location targ) {
+			if (time > 20) {
+				target = targ;
+			}
+			if (time > 40) {
+				targ = this.home;
+				time = 0;
+			}
+			map[prev.yl][prev.xl] = replaced;
+			this.bestLoc();
+			prev = new Location(xloc, yloc);
+			int nx = nextl.xl;
+			int ny = nextl.yl;
+			map[yloc][xloc] = this.type;
+			xloc = nx;
+			yloc = ny;
+		}
+		private Location bestLoc() {
+			ArrayList<Location> locs = new Location(xloc, yloc).freeAdjacentLocations(prev);
+			double mind = 9999;
+			Location bestl = locs.get(0);
+			for (int i = 0; i < locs.size(); i++) {
+				Location t = locs.get(i);
+				int x = t.xl;
+				int y = t.yl;
+				int xt = this.target.xl;
+				int yt = this.target.yl;
+				Double distance = Math.sqrt(Math.pow((x - xt), 2) + Math.pow((y - yt), 2));
+				if (distance < mind) {
+					mind = distance;
+					bestl = locs.get(i);
+				}
+			}
+			nextl = bestl;
+			replaced = map[nextl.yl][nextl.xl];
+			if (replaced!=0 && replaced!=3) {
+				replaced = 3;
+			}
+			return bestl;
+		}
+	}
+
+	private void updatePacMan() {
+		map[yloc][xloc] = 3;
+		if (xloc + xv < 0 || yloc + yv < 0 || xloc + xv >= map[0].length || yloc + yv >= map.length) {
+			if (xloc + xv < 0)
+				xloc = map[0].length;
+			if (xloc + xv >= map[0].length)
+				xloc = -1;
+			next = 3;
+		} else {
+			next = map[yloc + yv][xloc + xv];
+			memx = xv;
+			memy = yv;
+		}
+		if (next != 1 && next != 2) {
+			if (next == 0)
+				score++;
+			xloc = xloc + xv;
+			yloc = yloc + yv;
+			map[yloc][xloc] = 4;
+		} else {
+			map[yloc][xloc] = 4;
+			xv = yv = 0;
+		}
+	}
+
+	private class Tile extends JPanel {
+		private ImageIcon icon = new ImageIcon("Word_Hunt_SF/pacman.minimap.png");
+		private Image i = icon.getImage();
+		private boolean alternate = false;
+
+		public Tile() {
+
+		}
+
+		public void paintComponent(Graphics g) {
+			g.setFont(new Font("Arial Black", Font.BOLD, 30));
+			g.drawImage(i, 0, 5, map[0].length * size, map.length * size + 5, 0, 0, 840, 840, Color.BLACK, null);
+			if (lose) {
+				g.setColor(Color.WHITE);
+				g.fillRoundRect((map.length / 2) * size - 200, (map.length / 2) * size - 100, 400, 200, 30, 30);
+				g.setColor(Color.black);
+				g.drawString("You Lose", (map.length / 2) * size - 70, (map.length / 2) * size - 70);
+				g.drawString("Your score was " + score, (map.length / 2) * size - 180, (map.length / 2) * size - 30);
+				g.drawString("Play Again?", (map.length / 2) * size - 70, (map.length / 2) * size + 10);
+				g.drawString("(Press any key)", (map.length / 2) * size - 120, (map.length / 2) * size + 40);
+				t.stop();
+				return;
+			}
+			if (win && score != 0) {
+				g.setColor(Color.WHITE);
+				g.fillRoundRect((map.length / 2) * size - 200, (map.length / 2) * size - 100, 400, 200, 30, 30);
+				g.setColor(Color.black);
+				g.drawString("You Win!", (map.length / 2) * size - 70, (map.length / 2) * size - 70);
+				g.drawString("Your score was " + score, (map.length / 2) * size - 180, (map.length / 2) * size - 30);
+				g.drawString("Play Again?", (map.length / 2) * size - 70, (map.length / 2) * size + 10);
+				g.drawString("(Press any key)", (map.length / 2) * size - 120, (map.length / 2) * size + 40);
+				t.stop();
+				return;
+			}
+			win = true;
+			lose = true;
+			for (int r = 0; r < map.length; r++) {
+				for (int c = 0; c < map[r].length; c++) {
+					if (map[r][c] == 0) {
+						win = false;
+						g.setColor(Color.yellow);
+						g.fillOval(c * size + size / 3, r * size + size / 3, size / 3, size / 3);
+					} else if (map[r][c] == 4) {
+						lose = false;
+						g.setColor(Color.YELLOW);
+						if (memx == memy && memy == 0) {
+							g.fillOval(c * size, r * size, size, size);
+						} else {
+							if (alternate) {
+								if (memx == -1) {
+									g.fillArc(c * size, r * size, size, size, 225, 270);
+								}
+								if (memy == -1) {
+									g.fillArc(c * size, r * size, size, size, 135, 270);
+								}
+								if (memx == 1) {
+									g.fillArc(c * size, r * size, size, size, 45, 270);
+								}
+								if (memy == 1) {
+									g.fillArc(c * size, r * size, size, size, 315, 270);
+								}
+								alternate = false;
+							} else {
+								g.fillOval(c * size, r * size, size, size);
+								alternate = true;
+							}
+						}
+					} else if (map[r][c] == inky) {
+						g.setColor(Color.CYAN);
+						drawGhost(g, c, r);
+					} else if (map[r][c] == pinky) {
+						g.setColor(Color.pink);
+						drawGhost(g, c, r);
+					} else if (map[r][c] == blinky) {
+						g.setColor(Color.red);
+						drawGhost(g, c, r);
+					} else if (map[r][c] == clyde) {
+						g.setColor(Color.orange);
+						drawGhost(g, c, r);
+					} else if (map[r][c] == 3) {
+						g.setColor(Color.WHITE);
+						g.fillOval(c * size + size / 3+2, r * size + size / 3+2, size / 6, size / 6);
+					}
+				}
+				if (debug) {
+					g.drawLine(red.xloc*size, red.yloc*size, red.target.xl*size,
+							red.target.yl*size);
+					g.drawLine(blue.xloc*size, blue.yloc*size, blue.target.xl*size,
+							blue.target.yl*size);
+					g.drawLine(pink.xloc*size, pink.yloc*size, pink.target.xl*size,
+							pink.target.yl*size);
+					g.drawLine(orange.xloc*size, orange.yloc*size, orange.target.xl*size,
+							orange.target.yl*size);
+				}
+			}
+			g.setColor(Color.white);
+			g.drawString("Score: " + score, 20, map.length * size + 50);
+			if (lose) {
+				xv = yv = 0;
+			}
+		}
+	}
+
+	private void drawGhost(Graphics g, int x, int y) {
+		g.fillOval(x * size, y * size, size, size);
+		g.fillRect(x * size, y * size + size / 2, size, size / 2);
+		int step = size / 5;
+		g.setColor(Color.black);
+		g.fillPolygon(
+				new int[] { x * size, x * size + step, x * size + step * 2, x * size + step * 2, x * size + step * 3,
+						x * size + step * 3, x * size + step * 4, x * size + step * 5 },
+				new int[] { y * size + size, y * size + size - step, y * size + size, y * size + size - step,
+						y * size + size - step, y * size + size, y * size + size - step, y * size + size },
+				8);
+		g.setColor(Color.white);
+		g.fillOval(x * size + step, y * size + step + step / 2, step, step + step / 2);
+		g.fillOval(x * size + step * 3, y * size + step + step / 2, step, step + step / 2);
+		g.setColor(Color.black);
+		g.fillOval(x * size + step + step / 3, y * size + step + step / 2, step / 3, step + step / 3);
+		g.fillOval(x * size + step * 3 + step / 3, y * size + step + step / 2, step / 3, step + step / 3);
+	}
+
+	public void keyTyped(KeyEvent e) {
+	}
+
+	public void keyPressed(KeyEvent e) {
+		// Up arrow
+		if (e.getKeyCode() == 38) {
+			yv = -speed;
+			xv = 0;
+		}
+		// Down arrow
+		else if (e.getKeyCode() == 40) {
+			yv = speed;
+			xv = 0;
+		}
+		// Left arrow
+		else if (e.getKeyCode() == 37) {
+			yv = 0;
+			xv = -speed;
+		}
+		// Right arrow
+		else if (e.getKeyCode() == 39) {
+			yv = 0;
+			xv = speed;
+		} else {
+			if (win || lose) {
+				xv = yv = 0;
+				win = false;
+				lose = false;
+				initMap();
+				xloc = 13;
+				yloc = 21;
+				red = new Ghost(13, 11, 27, 0, blinky, new Location(13, 12), blinkyt);
+				pink = new Ghost(13, 12, 0, 0, pinky, new Location(13, 13), pinkyt);
+				blue = new Ghost(12, 12, 28, 27, inky, new Location(12, 11), inkyt);
+				orange = new Ghost(13, 14, 0, 27, clyde, new Location(13, 15), clydet);
+				score = 0;
+				time = 0;
+				t.start();
+			}
+		}
+	}
+
+	public void keyReleased(KeyEvent e) {
+	}
+
+	private class Location {
+		int xl, yl;
+
+		public Location(int xl, int yl) {
+			this.xl = xl;
+			this.yl = yl;
+		}
+
+		public int getVal() {
+			return map[yl][xl];
+		}
+
+		public String toString() {
+			return "(" + xl + " " + yl + ")";
+		}
+
+		public boolean equals(Object o) {
+			if (this.xl == ((Location) o).xl && this.yl == ((Location) o).yl) {
+				return true;
+			}
+			return false;
+		}
+
+		private ArrayList<Location> freeAdjacentLocations(Location prev) {
+			int xloc = xl;
+			int yloc = yl;
+			ArrayList<Location> loc = new ArrayList<>();
+			Location down = new Location(xloc, yloc - 1);
+			Location up = new Location(xloc, yloc + 1);
+			Location left, right;
+			if (xloc - 1 == -1) {
+				left = new Location(map[0].length - 1, yloc);
+			} else {
+				left = new Location(xloc - 1, yloc);
+			}
+			if (xloc + 1 == map[0].length) {
+				right = new Location(0, yloc);
+			} else {
+				right = new Location(xloc + 1, yloc);
+			}
+			loc.add(up);
+			loc.add(left);
+			loc.add(down);
+			loc.add(right);
+			for (int x = loc.size() - 1; x >= 0; x--) {
+				if (prev.xl == loc.get(x).xl && prev.yl == loc.get(x).yl) {
+					loc.remove(x);
+				} else if (loc.get(x).getVal() == 1 || loc.get(x).getVal() == 9 || loc.get(x).getVal() == 2) {
+					loc.remove(x);
+				}
+			}
+			return loc;
+		}
+	}
+}
