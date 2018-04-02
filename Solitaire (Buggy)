@@ -1,0 +1,429 @@
+package Solitaire;
+
+import java.awt.Event;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EventListener;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+@SuppressWarnings("unused")
+public class Solitaire extends Application {
+	private static final int width = 800, height = 600, cardw = 80, cardh = 20, dur = 200;
+	private Board b;
+	private ArrayList<ArrayList<Card>> cards;
+	private ArrayList<Card> draw;
+	private int win = 0;
+	private class Board {
+		public Board() {
+			cards = new ArrayList<>();
+			new Deck();
+		}
+
+		private class Deck {
+			ArrayList<Card> cardss;
+			public Deck() {
+				cardss = new ArrayList<>();
+				for (int c = 1; c <= 13; c++) {
+					for (int r = 1; r <= 4; r++) {
+						cardss.add(new Card(c, r, r % 2, 0, 0));
+					}
+				}
+				int hello = 500;
+				Collections.shuffle(cardss);
+				for (int x = 1; x <= 7; x++) {
+					ArrayList<Card> pile = new ArrayList<>();
+					pile.add(new Card(0, 0, 0, 7, 0));
+					for (int y = 1; y <= x; y++) {
+						Card c = cardss.remove(0);
+						c.x = x - 1;
+						c.y = y;
+						Timeline t = new Timeline();
+						KeyFrame end = new KeyFrame(Duration.millis(dur), new KeyValue(c.xProperty(), cardw * x),
+								new KeyValue(c.yProperty(), cardh * (y + 8)));
+						t.getKeyFrames().add(end);
+						t.setDelay(Duration.millis(hello));
+						hello += 50;
+						t.play();
+						c.toFront();
+						c.addEventFilter(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+							@Override
+							public void handle(MouseEvent event) {
+								handleCard(c.x, c.y);
+							}
+						});
+						if (y != x) {
+							c.setImage(new Image("/Solitaire/cards/back1.GIF"));
+						}
+						pile.add(c);
+					}
+					cards.add(pile);
+				}
+				ArrayList<Card> lastPile = new ArrayList<>();
+				Card ccc = new Card(14, 0, 0, 7, 0);
+				ccc.setX(cardw);
+				ccc.setY(cardh);
+				ccc.addEventFilter(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+					@Override
+					public void handle(MouseEvent event) {
+						handleCard(14, 14);
+					}
+				});
+				lastPile.add(ccc);
+				for (int x = 0; x < cardss.size(); x++) {
+					Card c = cardss.get(x);
+					c.x = 7;
+					c.y = x + 1;
+					c.setImage(new Image("/Solitaire/cards/back1.GIF"));
+					c.setX(cardw);
+					c.setY(cardh);
+					c.addEventFilter(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+						@Override
+						public void handle(MouseEvent event) {
+							handleCard(c.x, c.y);
+						}
+					});
+					lastPile.add(c);
+				}
+				Card c1 = lastPile.remove(lastPile.size() - 1);
+				c1.x = 12;
+				c1.y = 0;
+				c1.setImage(new Image(c1.name));
+				Timeline t = new Timeline();
+				KeyFrame end = new KeyFrame(Duration.millis(dur), new KeyValue(c1.xProperty(), c1.getX() + cardw),
+						new KeyValue(c1.yProperty(), cardh));
+				t.getKeyFrames().add(end);
+				t.play();
+				c1.toFront();
+				addTimeline(c1,dur,c1.getX()+cardw,cardh);
+				draw.add(c1);
+				cards.add(lastPile);
+				for (int x = 0; x < 4; x++) {
+					ArrayList<Card> aces = new ArrayList<>();
+					Card c = new Card(0, x + 1, 0, 8 + x, 0);
+					c.setX(cardw * (x + 5));
+					c.setY(cardh);
+					aces.add(c);
+					cards.add(aces);
+				}
+				cards.add(draw);
+			}
+		}
+	}
+	private void addTimeline(Card c, int time, double x, double y) {
+		Timeline t = new Timeline();
+		KeyFrame end = new KeyFrame(Duration.millis(time), new KeyValue(c.xProperty(), x),
+				new KeyValue(c.yProperty(), y));
+		t.getKeyFrames().add(end);
+		t.play();
+		c.toFront();
+	}
+	private class Card extends ImageView {
+		int number, suit, color, x, y;
+		String name;
+
+		public Card(int number, int suit, int color, int x, int y) {
+			this.number = number;
+			this.color = color;
+			this.suit = suit;
+			this.x = x;
+			this.y = y;
+			this.name = "/Solitaire/cards/";
+			switch (number) {
+			case (1): {
+				name += "ace";
+				break;
+			}
+			case (11): {
+				name += "jack";
+				break;
+			}
+			case (12): {
+				name += "queen";
+				break;
+			}
+			case (13): {
+				name += "king";
+				break;
+			}
+			case 0: {
+				name = "/Solitaire/cards/back1";
+				break;
+			}
+			case 14: {
+				name = "/Solitaire/cards/back1";
+				break;
+			}
+			default: {
+				name += Integer.toString(number);
+				break;
+			}
+			}
+			if (!name.equals("/Solitaire/cards/back1")) {
+				switch (suit) {
+				case 1: {
+					name += "clubs";
+					break;
+				}
+				case 2: {
+					name += "diamonds";
+					break;
+				}
+				case 3: {
+					name += "spades";
+					break;
+				}
+				case 4: {
+					name += "hearts";
+					break;
+				}
+				}
+			}
+			name += ".GIF";
+			this.setImage(new Image(name));
+		}
+	}
+	
+	public Solitaire() {
+		draw = new ArrayList<>();
+		b = new Board();
+	}
+
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		new Solitaire();
+		Group group = new Group();
+		ObservableList<Node> list = group.getChildren();
+		Text t = new Text(height/2,width/2,"You Win!");
+		ImageView v = new ImageView(new Image("Solitaire/green.jpg"));
+		v.setFitHeight(height);
+		v.setFitWidth(width);
+		v.toBack();
+		list.add(v);
+		t.setFont(new Font("Avenir",45));
+		t.setVisible(false);
+		for (int x = 0; x < cards.size(); x++) {
+			list.addAll(cards.get(x));
+		}
+		list.add(t);
+		Scene scene = new Scene(group, width, height);
+		scene.setFill(Color.DARKGREEN);
+		primaryStage.setScene(scene);
+		primaryStage.setTitle("Solitaire");
+		primaryStage.show();
+	}
+
+	private void handleCard(double pile, double card) {
+		int p = (int) pile;
+		int i = (int) card;
+		boolean fp = pile == 12;
+		try {
+			if (p == 14 && i == 14) {
+				for (Card c : draw) {
+					c.setImage(new Image("/Solitaire/cards/back1.GIF"));
+					Timeline t = new Timeline();
+					KeyFrame end = new KeyFrame(Duration.millis(dur / 2), new KeyValue(c.xProperty(), cardw),
+							new KeyValue(c.yProperty(), cardh));
+					t.getKeyFrames().add(end);
+					t.play();
+					c.toFront();
+					c.x = 7;
+					c.y = cards.get(7).size();
+				}
+				cards.get(7).addAll(draw);
+				draw.clear();
+			} else {
+				Card c = cards.get(p).remove(i);
+				boolean canPlay = false;
+				if (p == 7) {
+					c.setImage(new Image(c.name));
+					Timeline t = new Timeline();
+					KeyFrame end = new KeyFrame(Duration.millis(dur / 2), new KeyValue(c.xProperty(), c.getX() + cardw),
+							new KeyValue(c.yProperty(), cardh));
+					t.getKeyFrames().add(end);
+					t.play();
+					c.toFront();
+					c.x = 12;
+					c.y = draw.size();
+					draw.add(c);
+					canPlay = true;
+					c.setY(cards.get(1).size() * cardh);
+				} else if (c.number == 1 && (c.x <= 7 || c.x == 12) && i == cards.get(p).size()) {
+					c.x = c.suit + 7;
+					c.y = 1;
+					Timeline t = new Timeline();
+					KeyFrame end;
+					if (fp) {
+						end = new KeyFrame(Duration.millis(dur), new KeyValue(c.xProperty(), cardw * (c.suit + 4)),
+								new KeyValue(c.yProperty(), c.getY()));
+					} else {
+						end = new KeyFrame(Duration.millis(dur), new KeyValue(c.xProperty(), cardw * (c.suit + 4)),
+								new KeyValue(c.yProperty(), c.getY() - cardh * (i + 7)));
+					}
+					t.getKeyFrames().add(end);
+					cards.get(7 + c.suit).add(c);
+					canPlay = true;
+					c.toFront();
+					t.play();
+					win++;
+				} else if (i == cards.get(p).size()) {
+					for (int x = 8; x < 12; x++) {
+						Card ap = cards.get(x).get(cards.get(x).size() - 1);
+						if (ap.number - c.number == -1 && ap.suit == c.suit) {
+							c.x = c.suit + 7;
+							c.y = c.number;
+							Timeline t = new Timeline();
+							KeyFrame end;
+							if (fp) {
+								end = new KeyFrame(Duration.millis(dur),
+										new KeyValue(c.xProperty(), cardw * (c.suit + 4)),
+										new KeyValue(c.yProperty(), c.getY()));
+							} else {
+								end = new KeyFrame(Duration.millis(dur),
+										new KeyValue(c.xProperty(), cardw * (c.suit + 4)),
+										new KeyValue(c.yProperty(), c.getY() - cardh * (i + 7)));
+							}
+							t.getKeyFrames().add(end);
+							cards.get(7 + c.suit).add(c);
+							canPlay = true;
+							c.toFront();
+							t.play();
+							win++;
+							break;
+						}
+					}
+				}
+				if (!canPlay) {
+					if (c.number < 13) {
+						for (int x = 0; x < 7; x++) {
+							if (x != c.x) {
+								Card car = cards.get(x).get(cards.get(x).size() - 1);
+								if (car.number - c.number == 1 && car.color != c.color) {
+									if (c.y == cards.get(c.x).size()) {
+										int temp = c.x;
+										c.x = x;
+										c.y = cards.get(x).size();
+										cards.get(x).add(c);
+										Timeline t = new Timeline();
+										KeyFrame end;
+										if (fp) {
+											end = new KeyFrame(Duration.millis(dur),
+													new KeyValue(c.xProperty(), c.getX() + (x - 1) * cardw),
+													new KeyValue(c.yProperty(),
+															c.getY() + (cards.get(x).size() + 7) * cardh - c.getY()));
+										} else {
+											end = new KeyFrame(Duration.millis(dur),
+													new KeyValue(c.xProperty(), c.getX() + (x - temp) * cardw),
+													new KeyValue(c.yProperty(),
+															c.getY() + (cards.get(x).size() + 7) * cardh - c.getY()));
+										}
+										t.getKeyFrames().add(end);
+										t.play();
+										c.toFront();
+										canPlay = true;
+										break;
+									} else {
+										move(c.x, i, x, c);
+										canPlay = true;
+										break;
+									}
+								}
+							}
+						}
+					} else if (c.number == 13) {
+						for (int x = 0; x < 7; x++) {
+							if (x != c.x) {
+								if (cards.get(x).size() == 1) {
+									if (c.y == cards.get(c.x).size()) {
+										int temp = c.x;
+										c.x = x;
+										c.y = cards.get(x).size();
+										cards.get(x).add(c);
+										Timeline t = new Timeline();
+										KeyFrame end;
+										if (fp) {
+											end = new KeyFrame(Duration.millis(dur),
+													new KeyValue(c.xProperty(), c.getX() + (x - 1) * cardw),
+													new KeyValue(c.yProperty(),
+															c.getY() + (cards.get(x).size() + 7) * cardh - c.getY()));
+										} else {
+											end = new KeyFrame(Duration.millis(dur),
+													new KeyValue(c.xProperty(), c.getX() + (x - temp) * cardw),
+													new KeyValue(c.yProperty(),
+															c.getY() + (cards.get(x).size() + 7) * cardh - c.getY()));
+										}
+										t.getKeyFrames().add(end);
+										t.play();
+										c.toFront();
+										canPlay = true;
+										break;
+									} else {
+										move(c.x, i, x, c);
+										canPlay = true;
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+				if (!canPlay) {
+					cards.get(p).add(c);
+				} else {
+					if (i > 1) {
+						Card temp = cards.get(p).get(i - 1);
+						temp.setImage(new Image(temp.name));
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void move(int fromr, int fromi, int tor, Card c) {
+		c.x = tor;
+		c.y = cards.get(tor).size();
+		cards.get(tor).add(c);
+		Timeline t = new Timeline();
+		KeyFrame end = new KeyFrame(Duration.millis(dur), new KeyValue(c.xProperty(), c.getX() + (tor - fromr) * cardw),
+				new KeyValue(c.yProperty(), c.getY() + (cards.get(tor).size() + 7) * cardh - c.getY()));
+		t.getKeyFrames().add(end);
+		t.play();
+		c.toFront();
+		while (fromi < cards.get(fromr).size()) {
+			Card c1 = cards.get(fromr).remove(fromi);
+			c1.x = tor;
+			c1.y = cards.get(tor).size();
+			cards.get(tor).add(c1);
+			Timeline t1 = new Timeline();
+			KeyFrame end1 = new KeyFrame(Duration.millis(dur),
+					new KeyValue(c1.xProperty(), c1.getX() + (tor - fromr) * cardw),
+					new KeyValue(c1.yProperty(), c1.getY() + (cards.get(tor).size() + 7) * cardh - c1.getY()));
+			t1.getKeyFrames().add(end1);
+			t1.play();
+			c1.toFront();
+		}
+	}
+
+	public static void main(String[] args) {
+		launch(args);
+	}
+}
