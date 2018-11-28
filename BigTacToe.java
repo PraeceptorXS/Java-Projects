@@ -1,7 +1,6 @@
 package BigTacToe;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javafx.application.Application;
 import javafx.collections.ObservableList;
@@ -11,9 +10,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Ellipse;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -35,13 +33,11 @@ public class BigTacToe extends Application {
 		neutral = true;
 	}
 	private class Tile extends Rectangle {
-		String value;
 		int r, c;
 		Grid g;
 		Text t;
 		boolean clicked;
 		public Tile(int r, int c, Grid g) {
-			this.value = " ";
 			this.r = r;
 			this.c = c;
 			this.g = g;
@@ -58,13 +54,13 @@ public class BigTacToe extends Application {
 					handleClick();
 				}
 			});
-			this.t = new Text(value);
-			t.setX(offset + (3*g.c + c) * tsize + g.c*offset + tsize /2);
-			t.setY(offset + (3*g.r + r) * tsize + g.r*offset + tsize /2);
+			this.t = new Text(" ");
+			t.setFont(new Font("Courier",50));
+			t.setX(offset + (3*g.c + c) * tsize + g.c*offset + 32);
+			t.setY(offset + (3*g.r + r) * tsize + g.r*offset + 65);
 			clicked = false;
 		}
 		void handleClick() {
-			System.out.println(this.g.r + " " + this.g.c + " - " + curr + " " + curr);
 			if (this.clicked) {
 				return;
 			}
@@ -78,22 +74,22 @@ public class BigTacToe extends Application {
 			curc = c;
 			clicked = true;
 			t.setText(currentPlayer);
-			currentPlayer = value.equals("X")?"O":"X";
 			selected(r, c);
-			if (this.g.finished) {
-				g.setFill(Color.BLACK);
+			currentPlayer = currentPlayer.equals("X")?"O":"X";
+			if (board[r][c].finished) {
 				neutral = true;
+			} else {
+				neutral = false;
 			}
-			neutral = false;
+			bigCheck();
 		}
 	}
 	private class Grid extends Rectangle {
-		String value;
 		boolean finished = false;
 		int r, c;
+		Text t;
 		Tile[][] grid;
 		public Grid(int r, int c) {
-			this.value = " ";
 			this.r = r;
 			this.c = c;
 			grid = new Tile[3][3];
@@ -103,11 +99,18 @@ public class BigTacToe extends Application {
 					grid[r1][c1] = t;
 				}
 			}
+			this.setArcHeight(7);
+			this.setArcWidth(7);
 			this.setX(offset + 3 * this.c * tsize + this.c * offset);
 			this.setY(offset + 3 * this.r * tsize + + this.r * offset);
-			this.setHeight(3*tsize - offset);
-			this.setWidth(3*tsize - offset);
+			this.setHeight(3*tsize-offset);
+			this.setWidth(3*tsize-offset);
 			this.setFill(Color.DARKORANGE);
+			this.t = new Text(" ");
+			t.setFont(new Font("Courier",150));
+			t.setFill(Color.BLACK);
+			t.setX(offset + (3*c) * tsize + c*offset + 87);
+			t.setY(offset + (3*r) * tsize + r*offset + 100+95);
 		}
 		ArrayList<Rectangle> getTiles() {
 			ArrayList<Rectangle> tiles = new ArrayList<>();
@@ -128,24 +131,47 @@ public class BigTacToe extends Application {
 			return text;
 		}
 		boolean check() {
+			boolean x = check("X");
+			boolean o = check("O");
+			
+			if (x) {
+				this.toFront();
+				this.setX(offset + 3 * this.c * tsize + this.c * offset+3);
+				this.setY(offset + 3 * this.r * tsize + + this.r * offset+3);
+				t.setFill(Color.BLACK);
+				this.t.setText("X");
+				this.t.toFront();
+				return true;
+			}
+			
+			if (o) {
+				this.toFront();
+				this.setX(offset + 3 * this.c * tsize + this.c * offset+3);
+				this.setY(offset + 3 * this.r * tsize + + this.r * offset+3);
+				t.setFill(Color.BLACK);
+				this.t.setText("O");
+				this.t.toFront();
+				return true;
+			}
+			return false;
+		}
+		private boolean check(String s) {
 			for (int r = 0; r< grid.length; r++) {
 				for (int c = 0; c< grid[r].length;c++) {
-					if (!grid[r][c].t.getText().equals(currentPlayer)) {
+					if (!grid[r][c].t.getText().equals(s)) {
 						break;
 					}
 					if (c == 2) {
-						System.out.println("Won on square" + r + " " + c);
 						return true;
 					}
 				}
 			}
 			for (int c = 0; c< grid.length; c++) {
 				for (int r = 0; r< grid[c].length;r++) {
-					if (!grid[r][c].t.getText().equals(currentPlayer)) {
+					if (!grid[r][c].t.getText().equals(s)) {
 						break;
 					}
 					if (r == 2) {
-						System.out.println("Won on square" + r + " " + c);
 						return true;
 					}
 				}
@@ -158,8 +184,7 @@ public class BigTacToe extends Application {
 			
 			if (tl.equals(br)) {
 				if (tl.equals(ce)) {
-					if (ce.equals(currentPlayer)) {
-						System.out.println("Won on square" + r + " " + c);
+					if (ce.equals(s)) {
 						return true;
 					}
 				}
@@ -167,8 +192,7 @@ public class BigTacToe extends Application {
 			
 			if (tr.equals(bl)) {
 				if (bl.equals(ce)) {
-					if (ce.equals(currentPlayer)) {
-						System.out.println("Won on square" + r + " " + c);
+					if (ce.equals(s)) {
 						return true;
 					}
 				}
@@ -188,24 +212,88 @@ public class BigTacToe extends Application {
 				}
 			}
 		}
-		for (int r = 0; r< board[r1][c1].grid.length; r++) {
-			for (int c = 0; c< board[r1][c1].grid[r1].length;c++) {
-				board[r1][c1].grid[r][c].setFill(Color.AZURE);
-			}
-		}
-		board[r1][c1].setFill(Color.CORNFLOWERBLUE);	
-		board[r1][c1].finished = board[r1][c1].check();
 		if (board[r1][c1].finished) {
-			
+			for (int r = 0; r< board.length; r++) {
+				for (int c = 0; c< board.length;c++) {
+					if (!board[r][c].finished) {
+						board[r][c].setFill(Color.CORNFLOWERBLUE);
+						for (int r2 = 0; r2< board[r][c].grid.length; r2++) {
+							for (int c2 = 0; c2< board[r][c].grid[r].length;c2++) {
+								board[r][c].grid[r2][c2].setFill(Color.AZURE);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			for (int r = 0; r< board[r1][c1].grid.length; r++) {
+				for (int c = 0; c< board[r1][c1].grid[r1].length;c++) {
+					board[r1][c1].grid[r][c].setFill(Color.AZURE);
+				}
+			}
+			board[r1][c1].setFill(Color.CORNFLOWERBLUE);
 		}
-		
 		for (int r = 0; r< board.length; r++) {
 			for (int c = 0; c< board[r].length;c++) {
 				if (board[r][c].finished) {
-					board[r][c].setFill(Color.BLACK);
+					board[r][c].setFill(Color.DARKSALMON);
 				}
 			}
 		}
+	}
+	void bigCheck() {
+		if (bigCheck("X")) {
+			System.out.println("Player 1 wins!");
+			System.exit(0);
+		}
+		if (bigCheck("O")) {
+			System.out.println("Player 2 wins!");
+			System.exit(0);
+		}
+	}
+	private boolean bigCheck(String s) {
+		for (int r = 0; r< board.length; r++) {
+			for (int c = 0; c< board[r].length;c++) {
+				if (!board[r][c].t.getText().equals(s)) {
+					break;
+				}
+				if (c == 2) {
+					return true;
+				}
+			}
+		}
+		for (int c = 0; c< board.length; c++) {
+			for (int r = 0; r< board[c].length;r++) {
+				if (!board[r][c].t.getText().equals(s)) {
+					break;
+				}
+				if (r == 2) {
+					return true;
+				}
+			}
+		}
+		String tl = board[0][0].t.getText();
+		String bl = board[0][2].t.getText();
+		String tr = board[2][0].t.getText();
+		String br = board[2][2].t.getText();
+		String ce = board[1][1].t.getText();
+		
+		if (tl.equals(br)) {
+			if (tl.equals(ce)) {
+				if (ce.equals(s)) {
+					return true;
+				}
+			}
+		}
+		
+		if (tr.equals(bl)) {
+			if (bl.equals(ce)) {
+				if (ce.equals(s)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	public void start(Stage primaryStage) {
 		Group group = new Group();
@@ -215,12 +303,12 @@ public class BigTacToe extends Application {
 				list.add(board[r][c]);
 				list.addAll(board[r][c].getTiles());
 				list.addAll(board[r][c].getText());
+				list.add(board[r][c].t);
 			}
 		}
-		System.out.println();
-		int a = 0;
-		Scene s = new Scene(group, 950, 950);
-		s.setFill(Color.DIMGRAY);
+		Scene s = new Scene(group, 945, 945);
+		s.setFill(Color.CHOCOLATE);
+		primaryStage.setTitle("BigTacToe");
 		primaryStage.setScene(s);
 		primaryStage.show();
 	}
