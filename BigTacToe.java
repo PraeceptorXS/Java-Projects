@@ -21,6 +21,8 @@ public class BigTacToe extends Application {
 	Grid[][] board;
 	int curr, curc;
 	boolean neutral;
+	Rectangle back;
+	Text winner;
 	public BigTacToe() {
 		currentPlayer = "X";
 		board = new Grid[3][3];
@@ -30,6 +32,12 @@ public class BigTacToe extends Application {
 				board[r][c] = g;
 			}
 		}
+		back = new Rectangle(0,0,945,945);
+		back.setFill(Color.CHOCOLATE);
+		winner = new Text();
+		winner.setX(100);
+		winner.setY(400);
+		winner.setFont(new Font("Courier", 100));
 		neutral = true;
 	}
 	private class Tile extends Rectangle {
@@ -74,6 +82,8 @@ public class BigTacToe extends Application {
 			curc = c;
 			clicked = true;
 			t.setText(currentPlayer);
+			t.toFront();
+			t.setFill(currentPlayer.equals("X")?Color.DARKORANGE:Color.CORNFLOWERBLUE);
 			selected(r, c);
 			currentPlayer = currentPlayer.equals("X")?"O":"X";
 			if (board[r][c].finished) {
@@ -101,16 +111,16 @@ public class BigTacToe extends Application {
 			}
 			this.setArcHeight(7);
 			this.setArcWidth(7);
-			this.setX(offset + 3 * this.c * tsize + this.c * offset);
-			this.setY(offset + 3 * this.r * tsize + + this.r * offset);
-			this.setHeight(3*tsize-offset);
-			this.setWidth(3*tsize-offset);
+			this.setX(3 * this.c * tsize + this.c * offset + offset/1.25);
+			this.setY(3 * this.r * tsize + + this.r * offset + offset/1.25);
+			this.setHeight(3*tsize);
+			this.setWidth(3*tsize);
 			this.setFill(Color.DARKORANGE);
 			this.t = new Text(" ");
 			t.setFont(new Font("Courier",150));
 			t.setFill(Color.BLACK);
-			t.setX(offset + (3*c) * tsize + c*offset + 87);
-			t.setY(offset + (3*r) * tsize + r*offset + 100+95);
+			t.setX(offset + (3*c) * tsize + c*offset + 100);
+			t.setY(offset + (3*r) * tsize + r*offset + 100+90);
 		}
 		ArrayList<Rectangle> getTiles() {
 			ArrayList<Rectangle> tiles = new ArrayList<>();
@@ -133,12 +143,10 @@ public class BigTacToe extends Application {
 		boolean check() {
 			boolean x = check("X");
 			boolean o = check("O");
-			
 			if (x) {
 				this.toFront();
-				this.setX(offset + 3 * this.c * tsize + this.c * offset+3);
-				this.setY(offset + 3 * this.r * tsize + + this.r * offset+3);
-				t.setFill(Color.BLACK);
+				this.setFill(Color.ANTIQUEWHITE);
+				t.setFill(Color.DARKORANGE);
 				this.t.setText("X");
 				this.t.toFront();
 				return true;
@@ -146,9 +154,8 @@ public class BigTacToe extends Application {
 			
 			if (o) {
 				this.toFront();
-				this.setX(offset + 3 * this.c * tsize + this.c * offset+3);
-				this.setY(offset + 3 * this.r * tsize + + this.r * offset+3);
-				t.setFill(Color.BLACK);
+				this.setFill(Color.ANTIQUEWHITE);
+				t.setFill(Color.CORNFLOWERBLUE);
 				this.t.setText("O");
 				this.t.toFront();
 				return true;
@@ -236,19 +243,21 @@ public class BigTacToe extends Application {
 		for (int r = 0; r< board.length; r++) {
 			for (int c = 0; c< board[r].length;c++) {
 				if (board[r][c].finished) {
-					board[r][c].setFill(Color.DARKSALMON);
+					board[r][c].setFill(Color.ANTIQUEWHITE);
 				}
 			}
 		}
 	}
 	void bigCheck() {
 		if (bigCheck("X")) {
-			System.out.println("Player 1 wins!");
-			System.exit(0);
+			winner.setFill(Color.BLACK);
+			winner.setText("Player 1 Wins!");
+			winner.toFront();
 		}
 		if (bigCheck("O")) {
-			System.out.println("Player 2 wins!");
-			System.exit(0);
+			winner.setFill(Color.BLACK);
+			winner.setText("Player 2 Wins!");
+			winner.toFront();
 		}
 	}
 	private boolean bigCheck(String s) {
@@ -298,16 +307,17 @@ public class BigTacToe extends Application {
 	public void start(Stage primaryStage) {
 		Group group = new Group();
 		ObservableList<Node> list = group.getChildren();
+		list.add(back);
+		list.add(this.winner);
 		for (int r = 0; r< board.length; r++) {
 			for (int c = 0; c< board[r].length;c++) {
 				list.add(board[r][c]);
-				list.addAll(board[r][c].getTiles());
 				list.addAll(board[r][c].getText());
 				list.add(board[r][c].t);
+				list.addAll(board[r][c].getTiles());
 			}
 		}
 		Scene s = new Scene(group, 945, 945);
-		s.setFill(Color.CHOCOLATE);
 		primaryStage.setTitle("BigTacToe");
 		primaryStage.setScene(s);
 		primaryStage.show();
