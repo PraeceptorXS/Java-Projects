@@ -22,7 +22,7 @@ public class BigTacToe extends Application {
 	int curr, curc;
 	boolean neutral;
 	Rectangle back;
-	Text winner;
+	Text winner, playrn;
 	public BigTacToe() {
 		currentPlayer = "X";
 		board = new Grid[3][3];
@@ -32,13 +32,14 @@ public class BigTacToe extends Application {
 				board[r][c] = g;
 			}
 		}
-		back = new Rectangle(0,0,945,945);
+		back = new Rectangle(0,0,945,1050);
 		back.setFill(Color.CHOCOLATE);
 		winner = new Text();
 		winner.setX(100);
 		winner.setY(400);
 		winner.setFont(new Font("Courier", 100));
 		neutral = true;
+		playrn = new Text("Current Player: " + currentPlayer);
 	}
 	private class Tile extends Rectangle {
 		int r, c;
@@ -91,6 +92,7 @@ public class BigTacToe extends Application {
 			} else {
 				neutral = false;
 			}
+			playrn.setText("Current Player: " + currentPlayer);
 			bigCheck();
 		}
 	}
@@ -251,12 +253,12 @@ public class BigTacToe extends Application {
 	void bigCheck() {
 		if (bigCheck("X")) {
 			winner.setFill(Color.BLACK);
-			winner.setText("Player 1 Wins!");
+			playrn.setText("Player 1 Wins!");
 			winner.toFront();
 		}
 		if (bigCheck("O")) {
 			winner.setFill(Color.BLACK);
-			winner.setText("Player 2 Wins!");
+			playrn.setText("Player 2 Wins!");
 			winner.toFront();
 		}
 	}
@@ -317,7 +319,13 @@ public class BigTacToe extends Application {
 				list.addAll(board[r][c].getTiles());
 			}
 		}
-		Scene s = new Scene(group, 945, 945);
+		
+		playrn.setFill(Color.BLACK);
+		playrn.setFont(new Font("Courier", 50));
+		playrn.setX(300);
+		playrn.setY(1005);
+		list.add(playrn);
+		Scene s = new Scene(group, 945, 1050);
 		primaryStage.setTitle("BigTacToe");
 		primaryStage.setScene(s);
 		primaryStage.show();
