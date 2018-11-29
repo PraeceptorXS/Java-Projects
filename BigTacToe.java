@@ -60,11 +60,42 @@ public class BigTacToe extends Application {
 					handleClick();
 				}
 			});
+			this.addEventFilter(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>(){
+				public void handle(MouseEvent event) {
+					preview();
+				}
+			});
 			this.t = new Text(" ");
 			t.setFont(new Font("Courier",50));
 			t.setX(offset + (3*g.c + c) * tsize + g.c*offset + 32);
 			t.setY(offset + (3*g.r + r) * tsize + g.r*offset + 65);
+			t.setMouseTransparent(true);
 			clicked = false;
+		}
+		void preview() {
+			if (this.clicked) {
+				return;
+			}
+			for (int r1 = 0; r1< board.length; r1++) {
+				for (int c1 = 0; c1< board[r1].length;c1++) {
+					if (board[r1][c1].getFill().equals(Color.CORNFLOWERBLUE)) {
+						for (int r2 = 0; r2< board[r][c].grid.length; r2++) {
+							for (int c2 = 0; c2< board[r][c].grid[r].length;c2++) {
+								if (!board[r1][c1].grid[r2][c2].clicked) {
+									board[r1][c1].grid[r2][c2].t.setText(" ");
+									board[r1][c1].grid[r2][c2].t.setFill(Color.WHITE);
+									board[r1][c1].grid[r2][c2].t.toBack();
+								}
+							}
+						}
+					}
+				}
+			}
+			if (this.g.getFill().equals(Color.CORNFLOWERBLUE)) {
+				t.setText(currentPlayer);
+				t.toFront();
+				t.setFill(currentPlayer.equals("X")?Color.DARKORANGE:Color.CORNFLOWERBLUE);
+			}
 		}
 		void handleClick() {
 			if (this.clicked) {
@@ -325,7 +356,7 @@ public class BigTacToe extends Application {
 			for (int c = 0; c< board.length;c++) {
 				if (!board[r][c].finished) {
 					empty = true;
-					return;
+					break;
 				}
 			}
 		}
