@@ -2,9 +2,12 @@ package BigTacToe;
 
 import java.util.ArrayList;
 
+import javafx.animation.RotateTransition;
+import javafx.animation.ScaleTransition;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -14,6 +17,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class BigTacToe extends Application {
 	final int offset = 12, tsize = 100;
@@ -21,8 +25,7 @@ public class BigTacToe extends Application {
 	Grid[][] board;
 	int curr, curc;
 	boolean neutral;
-	Rectangle back;
-	Text winner, playrn;
+	Text playrn;
 	public BigTacToe() {
 		currentPlayer = "X";
 		board = new Grid[3][3];
@@ -32,12 +35,6 @@ public class BigTacToe extends Application {
 				board[r][c] = g;
 			}
 		}
-		back = new Rectangle(0,0,945,1050);
-		back.setFill(Color.CHOCOLATE);
-		winner = new Text();
-		winner.setX(100);
-		winner.setY(400);
-		winner.setFont(new Font("Courier", 100));
 		neutral = true;
 		playrn = new Text("Current Player: " + currentPlayer);
 	}
@@ -86,6 +83,12 @@ public class BigTacToe extends Application {
 			t.toFront();
 			t.setFill(currentPlayer.equals("X")?Color.DARKORANGE:Color.CORNFLOWERBLUE);
 			selected(r, c);
+			RotateTransition ro = new RotateTransition(Duration.millis(200), this);
+			ro.setAxis(new Point3D(1,1,0));
+			ro.setByAngle(180);
+			ro.setAutoReverse(true);
+			ro.setCycleCount(1);
+			ro.play();
 			currentPlayer = currentPlayer.equals("X")?"O":"X";
 			if (board[r][c].finished) {
 				neutral = true;
@@ -97,10 +100,11 @@ public class BigTacToe extends Application {
 		}
 	}
 	private class Grid extends Rectangle {
-		boolean finished = false;
+		boolean finished = false, first = true;
 		int r, c;
 		Text t;
 		Tile[][] grid;
+		ScaleTransition sc;
 		public Grid(int r, int c) {
 			this.r = r;
 			this.c = c;
@@ -114,7 +118,7 @@ public class BigTacToe extends Application {
 			this.setArcHeight(7);
 			this.setArcWidth(7);
 			this.setX(3 * this.c * tsize + this.c * offset + offset/1.25);
-			this.setY(3 * this.r * tsize + + this.r * offset + offset/1.25);
+			this.setY(3 * this.r * tsize + this.r * offset + offset/1.25);
 			this.setHeight(3*tsize);
 			this.setWidth(3*tsize);
 			this.setFill(Color.DARKORANGE);
@@ -123,6 +127,11 @@ public class BigTacToe extends Application {
 			t.setFill(Color.BLACK);
 			t.setX(offset + (3*c) * tsize + c*offset + 100);
 			t.setY(offset + (3*r) * tsize + r*offset + 100+90);
+			sc = new ScaleTransition(Duration.millis(500), this);
+			sc.setByX(0.05);
+			sc.setByY(0.05);
+			sc.setAutoReverse(true);
+			sc.setCycleCount(2);
 		}
 		ArrayList<Rectangle> getTiles() {
 			ArrayList<Rectangle> tiles = new ArrayList<>();
@@ -146,6 +155,15 @@ public class BigTacToe extends Application {
 			boolean x = check("X");
 			boolean o = check("O");
 			if (x) {
+				if(this.first) {
+					RotateTransition ro = new RotateTransition(Duration.millis(400), this);
+					ro.setAxis(new Point3D(1,0,0));
+					ro.setByAngle(180);
+					ro.setAutoReverse(true);
+					ro.setCycleCount(1);
+					ro.play();
+					first = false;
+				}
 				this.toFront();
 				this.setFill(Color.ANTIQUEWHITE);
 				t.setFill(Color.DARKORANGE);
@@ -153,12 +171,46 @@ public class BigTacToe extends Application {
 				this.t.toFront();
 				return true;
 			}
-			
+
 			if (o) {
+				if(this.first) {
+					first = false;
+					RotateTransition ro = new RotateTransition(Duration.millis(400), this);
+					ro.setAxis(new Point3D(1,0,0));
+					ro.setByAngle(180);
+					ro.setAutoReverse(true);
+					ro.setCycleCount(1);
+					ro.play();
+				}
 				this.toFront();
 				this.setFill(Color.ANTIQUEWHITE);
 				t.setFill(Color.CORNFLOWERBLUE);
 				this.t.setText("O");
+				this.t.toFront();
+				return true;
+			}
+			boolean empty = false;
+			for (int r = 0; r< board.length; r++) {
+				for (int c = 0; c< board.length;c++) {
+					if (!grid[r][c].clicked) {
+						empty = true;
+					}
+				}
+			}
+			if (!empty) {
+				if(this.first) {
+					RotateTransition ro = new RotateTransition(Duration.millis(400), this);
+					ro.setAxis(new Point3D(1,0,0));
+					ro.setByAngle(180);
+					ro.setAutoReverse(true);
+					ro.setCycleCount(1);
+					ro.play();
+					first = false;
+				}
+				this.toFront();
+				this.setFill(Color.ANTIQUEWHITE);
+				t.setFill(Color.DARKORANGE);
+				this.t.setText("-");
 				this.t.toFront();
 				return true;
 			}
@@ -190,7 +242,7 @@ public class BigTacToe extends Application {
 			String tr = grid[2][0].t.getText();
 			String br = grid[2][2].t.getText();
 			String ce = grid[1][1].t.getText();
-			
+
 			if (tl.equals(br)) {
 				if (tl.equals(ce)) {
 					if (ce.equals(s)) {
@@ -198,7 +250,7 @@ public class BigTacToe extends Application {
 					}
 				}
 			}
-			
+
 			if (tr.equals(bl)) {
 				if (bl.equals(ce)) {
 					if (ce.equals(s)) {
@@ -214,6 +266,7 @@ public class BigTacToe extends Application {
 			for (int c = 0; c< board[r].length;c++) {
 				board[r][c].setFill(Color.DARKORANGE);
 				board[r][c].finished = board[r][c].check();
+				board[r][c].sc.stop();
 				for (int r2 = 0; r2< board[r][c].grid.length; r2++) {
 					for (int c2 = 0; c2< board[r][c].grid[r].length;c2++) {
 						board[r][c].grid[r2][c2].setFill(Color.ANTIQUEWHITE);
@@ -231,6 +284,7 @@ public class BigTacToe extends Application {
 								board[r][c].grid[r2][c2].setFill(Color.AZURE);
 							}
 						}
+						board[r][c].sc.play();
 					}
 				}
 			}
@@ -241,25 +295,55 @@ public class BigTacToe extends Application {
 				}
 			}
 			board[r1][c1].setFill(Color.CORNFLOWERBLUE);
+			board[r1][c1].sc.play();
 		}
 		for (int r = 0; r< board.length; r++) {
 			for (int c = 0; c< board[r].length;c++) {
 				if (board[r][c].finished) {
 					board[r][c].setFill(Color.ANTIQUEWHITE);
 				}
+				ScaleTransition sct = new ScaleTransition(Duration.millis(1), board[r][c]);
+				sct.setToX(1);
+				sct.setToY(1);
+				sct.setCycleCount(1);
+				sct.play();
 			}
 		}
 	}
 	void bigCheck() {
+		boolean test = false;
 		if (bigCheck("X")) {
-			winner.setFill(Color.BLACK);
 			playrn.setText("Player 1 Wins!");
-			winner.toFront();
+			test = true;
 		}
 		if (bigCheck("O")) {
-			winner.setFill(Color.BLACK);
 			playrn.setText("Player 2 Wins!");
-			winner.toFront();
+			test = true;
+		}
+		boolean empty = false;
+		for (int r = 0; r< board.length; r++) {
+			for (int c = 0; c< board.length;c++) {
+				if (!board[r][c].finished) {
+					empty = true;
+					return;
+				}
+			}
+		}
+		if (!empty) {
+			playrn.setText("It's a Draw!");
+			test = true;
+		}
+		if (test) {
+			for (int r = 0; r< board.length; r++) {
+				for (int c = 0; c< board.length;c++) {
+					board[r][c].setMouseTransparent(true);
+					for (int r2 = 0; r2< board[r][c].grid.length; r2++) {
+						for (int c2 = 0; c2< board[r][c].grid[r].length;c2++) {
+							board[r][c].grid[r2][c2].setMouseTransparent(true);
+						}
+					}
+				}
+			}
 		}
 	}
 	private boolean bigCheck(String s) {
@@ -288,7 +372,7 @@ public class BigTacToe extends Application {
 		String tr = board[2][0].t.getText();
 		String br = board[2][2].t.getText();
 		String ce = board[1][1].t.getText();
-		
+
 		if (tl.equals(br)) {
 			if (tl.equals(ce)) {
 				if (ce.equals(s)) {
@@ -296,7 +380,7 @@ public class BigTacToe extends Application {
 				}
 			}
 		}
-		
+
 		if (tr.equals(bl)) {
 			if (bl.equals(ce)) {
 				if (ce.equals(s)) {
@@ -309,8 +393,6 @@ public class BigTacToe extends Application {
 	public void start(Stage primaryStage) {
 		Group group = new Group();
 		ObservableList<Node> list = group.getChildren();
-		list.add(back);
-		list.add(this.winner);
 		for (int r = 0; r< board.length; r++) {
 			for (int c = 0; c< board[r].length;c++) {
 				list.add(board[r][c]);
@@ -319,13 +401,18 @@ public class BigTacToe extends Application {
 				list.addAll(board[r][c].getTiles());
 			}
 		}
-		
+		Rectangle rect = new Rectangle(190,950,550,80);
+		rect.setArcHeight(10);
+		rect.setArcWidth(10);
+		rect.setFill(Color.ANTIQUEWHITE);
+		list.add(rect);
 		playrn.setFill(Color.BLACK);
 		playrn.setFont(new Font("Courier", 50));
-		playrn.setX(300);
+		playrn.setX(210);
 		playrn.setY(1005);
 		list.add(playrn);
 		Scene s = new Scene(group, 945, 1050);
+		s.setFill(Color.CHOCOLATE);
 		primaryStage.setTitle("BigTacToe");
 		primaryStage.setScene(s);
 		primaryStage.show();
