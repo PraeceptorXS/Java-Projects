@@ -53,7 +53,7 @@ public class BigTacToe extends Application {
 			this.setY(offset + (3*g.r + r) * tsize + g.r*offset);
 			this.setHeight(offset/2 + tsize - offset);
 			this.setWidth(offset/2 + tsize - offset);
-			this.setFill(Color.ANTIQUEWHITE);
+			this.setFill(Color.ALICEBLUE);
 			this.addEventFilter(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent event) {
@@ -152,7 +152,7 @@ public class BigTacToe extends Application {
 			this.setY(3 * this.r * tsize + this.r * offset + offset/1.25);
 			this.setHeight(3*tsize);
 			this.setWidth(3*tsize);
-			this.setFill(Color.DARKORANGE);
+			this.setFill(Color.CORNFLOWERBLUE);
 			this.t = new Text(" ");
 			t.setFont(new Font("Courier",150));
 			t.setFill(Color.BLACK);
