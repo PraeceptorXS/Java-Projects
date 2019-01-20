@@ -1,0 +1,231 @@
+package Scrabble;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Scanner;
+import java.util.TreeMap;
+
+public class Scrabble {
+	public Tile[][] board;
+	public ArrayList<Character> rack;
+	public ArrayList<String> wordList;
+	ArrayList<String> found = new ArrayList<>();
+	String boardState = "";
+	public Scrabble() {
+		board = new Tile[11][11];
+		rack = new ArrayList<>();
+		wordList = new ArrayList<>();
+//		String letters = "WORLDS$";
+//		for (int i = 0; i < letters.length(); i ++) {
+//			rack.add(letters.charAt(i));
+//		}
+		initState();
+		//initBoard("");
+		root = new Node('*');
+		populate();
+		for (int r = 0; r < board.length; r ++) {
+			for (int c = 0; c < board[r].length; c++) {
+				isAnchor(r, c);
+				System.out.print(board[r][c]);
+			}
+			System.out.println();
+		}
+		for (int r = 0; r < board.length; r ++) {
+			for (int c = 0; c < board[r].length; c++) {
+				if (isAnchor(r, c)) {
+					findWord(r, c);
+				}
+			}
+		}
+		System.out.println(rack);
+		Collections.sort(found, new MyComparator());
+		System.out.println(found);
+	}
+	private class MyComparator implements java.util.Comparator<String> {
+
+	    public MyComparator() {
+	        super();
+	    }
+
+	    public int compare(String s1, String s2) {
+	        return s2.length() - s1.length();
+	    }
+	}
+	private void initState() {
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter the rack: ");
+		String letters = in.nextLine();
+		for (int i = 0; i < letters.length(); i ++) {
+			rack.add(letters.charAt(i));
+		}
+		for (int i = 0; i < board.length; i ++) {
+			System.out.println("Enter line " + (i+1) + " of the board");
+			String line =in.nextLine();
+			while (line.length()!= 11) {
+				System.out.println("Wrong Length, try again");
+				line =in.nextLine();
+			}
+			boardState += line;
+		}
+		System.out.println(boardState);
+		initBoard(boardState);
+		in.close();
+	}
+	private void initBoard(String s) {
+		int i = 0;
+		for (int r = 0; r < board.length; r ++) {
+			for (int c = 0; c < board[r].length; c++) {
+				board[r][c] = new Tile(s.charAt(i));
+				i++;
+			}
+		}
+	}
+	public static void main(String[] args) {
+		new Scrabble();
+	}
+	public void findWord(int r, int c) {
+		findLeft("", root, r, c, getLimit(r, c), rack, found);
+	}
+	private int getLimit(int r, int c) {
+		int lim = 0;
+		while(r > 0 && !board[r-1][c].isAnchor) {
+			lim++;
+			r--;
+		}
+		return r == 0? lim : lim+1;
+	}
+	private void findLeft(String s, Node n, int r, int c, int limit, ArrayList<Character> ra, ArrayList<String> words) {
+		findRight(s, n, r, c, ra, words);
+		if (limit>0) {
+			for (Node e : n.children.values()) {
+				if (ra.contains(e.c)) {
+					char remove = ra.remove(ra.indexOf(e.c));
+					findLeft(s+remove, e, r, c, limit-1, ra, words);
+					ra.add(remove);
+				} else if (ra.contains('$')) {
+					char remove = ra.remove(ra.indexOf('$'));
+					findLeft(s+e.c, e, r, c, limit-1, ra, words);
+					ra.add(remove);
+				}
+			}
+		}
+	}
+	private void findRight(String s, Node n, int r, int c, ArrayList<Character> ra, ArrayList<String> words) {
+		if (c >= board.length) {
+			return;
+		}
+		if (board[r][c].c == ' ') {
+			if (n.children.containsKey('*')) {
+				if (!words.contains(s)) {
+					words.add(s);
+				}
+			}
+			for (Node e : n.children.values()) {
+				if (ra.contains(e.c) && crossCheck(r, c, e.c)) {
+					char remove = ra.remove(ra.indexOf(e.c));
+					findRight(s+remove, e, r, c+1, ra, words);
+					ra.add(remove);
+				} else if (!ra.isEmpty() && ra.contains('$') && crossCheck(r, c, e.c)) {
+					char remove = ra.remove(ra.indexOf('$'));
+					findRight(s+e.c, e, r, c+1, ra, words);
+					ra.add(remove);
+				}
+			}
+		} else {
+			char l = board[r][c].c;
+			if (n.children.containsKey(l)) {
+				findRight(s+l, n.children.get(l), r, c+1, ra, words);
+			}
+		}
+	}
+	public boolean crossCheck(int r, int c, char ch) {
+		int row = r;
+		char temp = board[r][c].c;
+		board[r][c].c = ch;
+		if (r-1 >= 0 && r+1 < board.length && board[r-1][c].c == ' ' && board[r+1][c].c == ' ') {
+			return true;
+		}
+		while (row >= 0 && board[row][c].c != ' ') {
+			row--;
+		}
+		row+= 1;
+		String s = "";
+		
+		while (row < board.length && board[row][c].c != ' ') {
+			s += board[row][c].c;
+			row++;
+		}
+		board[r][c].c = temp;
+		
+		return wordList.contains(s);
+	}
+	public void populate() {
+		try {
+			Scanner in = new Scanner(new File("dictionary.txt"));
+			while (in.hasNext()) {
+				String str = in.next();
+				wordList.add(str);
+				addWord(str, root);
+			}
+			in.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	public void addWord(String s, Node n) {
+		if (s.length() == 0) {
+			n.children.put('*', new Node('*'));
+			return;
+		}
+		char c = s.charAt(0);
+		if (!n.children.containsKey(c)) {
+			Node temp = new Node(c);
+			n.children.put(c, temp);
+			addWord(s.substring(1, s.length()), temp);
+		} else {
+			addWord(s.substring(1, s.length()), n.children.get(c));
+		}
+	}
+	private boolean isAnchor(int r, int c) {
+		if (board[r][c].c != ' ') {
+			return false;
+		}
+		for (int i = -1; i < 1; i ++) {
+			if (r+i >= board.length || r+i <0) {
+				continue;
+			}
+			for (int j = -1; j < 1; j ++) {
+				if (c+j >= board.length || c+j <0) {
+					continue;
+				}
+				if (board[r+i][c+j].c != ' ') {
+					board[r][c].isAnchor = true;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	Node root;
+	private class Tile {
+		char c;
+		public Tile(char c) {
+			this.c = c;
+		}
+		@Override
+		public String toString() {
+			return "["+this.c+"]";
+		}
+		boolean isAnchor = false;
+	}
+	private class Node {
+		public char c;
+		public TreeMap<Character, Node> children;
+		public Node(char c) {
+			this.c = c;
+			this.children = new TreeMap<>();
+		}
+	}
+}
