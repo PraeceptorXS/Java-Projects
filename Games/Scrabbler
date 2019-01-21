@@ -1,71 +1,77 @@
-package Scrabble;
+package Word_Hunt;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Scanner;
 import java.util.TreeMap;
 
 public class Scrabble {
 	public Tile[][] board;
+	public Tile[][] tempBoard = new Tile[11][11];
 	public ArrayList<Character> rack;
 	public ArrayList<String> wordList;
 	ArrayList<String> found = new ArrayList<>();
 	String boardState = "";
+
 	public Scrabble() {
 		board = new Tile[11][11];
 		rack = new ArrayList<>();
 		wordList = new ArrayList<>();
-//		String letters = "WORLDS$";
-//		for (int i = 0; i < letters.length(); i ++) {
-//			rack.add(letters.charAt(i));
-//		}
-		initState();
-		//initBoard("");
+		String letters = "WARSHIP";
+		for (int i = 0; i < letters.length(); i ++) {
+			rack.add(letters.charAt(i));
+		}
+		//initState();
+
+		initBoard("                                                   X                                    S                                ");
 		root = new Node('*');
 		populate();
-		for (int r = 0; r < board.length; r ++) {
+		for (int r = 0; r < board.length; r++) {
 			for (int c = 0; c < board[r].length; c++) {
-				isAnchor(r, c);
+				//tempBoard[r][c].isAnchor = board[r][c].isAnchor;
 				System.out.print(board[r][c]);
 			}
 			System.out.println();
 		}
-		for (int r = 0; r < board.length; r ++) {
+		for (int r = 0; r < board.length; r++) {
 			for (int c = 0; c < board[r].length; c++) {
-				if (isAnchor(r, c)) {
+				if (board[r][c].isAnchor != 'n') {
 					findWord(r, c);
 				}
 			}
 		}
 		System.out.println(rack);
-		Collections.sort(found, new MyComparator());
+		Collections.sort(found, new Comparator<String>() {
+			public int compare(String s1, String s2) {
+				return s2.length() - s1.length();
+			}
+		});
+		for (int r = 0; r < board.length; r++) {
+			for (int c = 0; c < board[r].length; c++) {
+				System.out.print(board[r][c]);
+			}
+			System.out.println();
+		}
+		System.out.println(getLimitX(8, 0));
 		System.out.println(found);
 	}
-	private class MyComparator implements java.util.Comparator<String> {
 
-	    public MyComparator() {
-	        super();
-	    }
-
-	    public int compare(String s1, String s2) {
-	        return s2.length() - s1.length();
-	    }
-	}
 	private void initState() {
 		Scanner in = new Scanner(System.in);
 		System.out.println("Enter the rack: ");
 		String letters = in.nextLine();
-		for (int i = 0; i < letters.length(); i ++) {
+		for (int i = 0; i < letters.length(); i++) {
 			rack.add(letters.charAt(i));
 		}
-		for (int i = 0; i < board.length; i ++) {
-			System.out.println("Enter line " + (i+1) + " of the board");
-			String line =in.nextLine();
-			while (line.length()!= 11) {
+		for (int i = 0; i < board.length; i++) {
+			System.out.println("Enter line " + (i + 1) + " of the board");
+			String line = in.nextLine();
+			while (line.length() != 11) {
 				System.out.println("Wrong Length, try again");
-				line =in.nextLine();
+				line = in.nextLine();
 			}
 			boardState += line;
 		}
@@ -73,97 +79,316 @@ public class Scrabble {
 		initBoard(boardState);
 		in.close();
 	}
+
 	private void initBoard(String s) {
 		int i = 0;
-		for (int r = 0; r < board.length; r ++) {
+		for (int r = 0; r < board.length; r++) {
 			for (int c = 0; c < board[r].length; c++) {
 				board[r][c] = new Tile(s.charAt(i));
+				tempBoard[r][c] = new Tile(s.charAt(i));
 				i++;
 			}
 		}
+		for (int r = 0; r < board.length; r++) {
+			for (int c = 0; c < board[r].length; c++) {
+				isAnchor(r, c);
+			}
+		}
+		for (int r = 0; r < board.length; r++) {
+			for (int c = 0; c < board[r].length; c++) {
+				tempBoard[r][c].isAnchor = board[r][c].isAnchor;
+			}
+		}
+		initTiles();
 	}
+
+	private void initTiles() {
+		board[2][4].multi = 1;
+		board[2][6].multi = 1;
+		board[4][2].multi = 1;
+		board[6][2].multi = 1;
+		board[8][4].multi = 1;
+		board[8][6].multi = 1;
+		board[4][8].multi = 1;
+		board[6][8].multi = 1;
+
+		board[0][0].multi = 2;
+		board[0][10].multi = 2;
+		board[10][0].multi = 2;
+		board[10][10].multi = 2;
+		board[2][2].multi = 2;
+		board[2][9].multi = 2;
+		board[3][3].multi = 2;
+		board[3][8].multi = 2;
+		board[6][8].multi = 2;
+		board[6][3].multi = 2;
+		board[8][8].multi = 2;
+		board[8][3].multi = 2;
+
+		board[1][1].multi = 3;
+		board[1][9].multi = 3;
+		board[1][5].multi = 3;
+		board[5][1].multi = 3;
+		board[5][9].multi = 3;
+		board[9][9].multi = 3;
+		board[9][5].multi = 3;
+		board[9][1].multi = 3;
+
+		board[0][2].multi = 4;
+		board[2][0].multi = 4;
+		board[0][8].multi = 4;
+		board[8][0].multi = 4;
+		board[10][2].multi = 4;
+		board[2][10].multi = 4;
+		board[8][10].multi = 4;
+		board[10][8].multi = 4;
+
+	}
+
 	public static void main(String[] args) {
 		new Scrabble();
 	}
+
 	public void findWord(int r, int c) {
-		findLeft("", root, r, c, getLimit(r, c), rack, found);
+		findLeft("", root, r, c, getLimit(r, c));
+		findUp("", root, r, c, getLimitX(r, c));
 	}
-	private int getLimit(int r, int c) {
-		int lim = 0;
-		while(r > 0 && !board[r-1][c].isAnchor) {
-			lim++;
-			r--;
-		}
-		return r == 0? lim : lim+1;
-	}
-	private void findLeft(String s, Node n, int r, int c, int limit, ArrayList<Character> ra, ArrayList<String> words) {
-		findRight(s, n, r, c, ra, words);
-		if (limit>0) {
+	private void findLeft(String s, Node n, int r, int c, int lim) {
+		findRight(s, n, r, c);
+		if (lim > 0) {
 			for (Node e : n.children.values()) {
-				if (ra.contains(e.c)) {
-					char remove = ra.remove(ra.indexOf(e.c));
-					findLeft(s+remove, e, r, c, limit-1, ra, words);
-					ra.add(remove);
-				} else if (ra.contains('$')) {
-					char remove = ra.remove(ra.indexOf('$'));
-					findLeft(s+e.c, e, r, c, limit-1, ra, words);
-					ra.add(remove);
+				if (rack.contains(e.c)) {
+					rack.remove(new Character(e.c));
+					findLeft(s+e.c, e, r, c, lim - 1);
+					rack.add(new Character(e.c));
+				} else if (rack.contains('$')) {
+					rack.remove(new Character('$'));
+					findLeft(s+e.c, e, r, c, lim-1);
+					rack.add(new Character('$'));
 				}
 			}
 		}
 	}
-	private void findRight(String s, Node n, int r, int c, ArrayList<Character> ra, ArrayList<String> words) {
-		if (c >= board.length) {
+	private void findRight(String s, Node n, int r, int c) {
+		if (c >= board.length || c < 0) {
 			return;
 		}
 		if (board[r][c].c == ' ') {
-			if (n.children.containsKey('*')) {
-				if (!words.contains(s)) {
-					words.add(s);
-				}
+			if (n.children.containsKey('*') && !found.contains(s)) {
+				found.add(s);
 			}
 			for (Node e : n.children.values()) {
-				if (ra.contains(e.c) && crossCheck(r, c, e.c)) {
-					char remove = ra.remove(ra.indexOf(e.c));
-					findRight(s+remove, e, r, c+1, ra, words);
-					ra.add(remove);
-				} else if (!ra.isEmpty() && ra.contains('$') && crossCheck(r, c, e.c)) {
-					char remove = ra.remove(ra.indexOf('$'));
-					findRight(s+e.c, e, r, c+1, ra, words);
-					ra.add(remove);
+				if (rack.contains(e.c) && crossCheck(r, c, e.c)) {
+					rack.remove(new Character(e.c));
+					findRight(s+e.c, e, r, c+1);
+					rack.add(new Character(e.c));
+				} else if (rack.contains('$') && crossCheck(r, c, e.c)) {
+					rack.remove(new Character('$'));
+					findRight(s+e.c, e, r, c+1);
+					rack.add(new Character('$'));
+				}
+			}
+			for (int rq = 0; rq < board.length; rq++) {
+				for (int cq = 0; cq < board[rq].length; cq++) {
+					board[rq][cq].c = tempBoard[rq][cq].c;
+					board[rq][cq].isAnchor = tempBoard[rq][cq].isAnchor;				
 				}
 			}
 		} else {
 			char l = board[r][c].c;
 			if (n.children.containsKey(l)) {
-				findRight(s+l, n.children.get(l), r, c+1, ra, words);
+				findRight(s+l, n.children.get(l), r, c+1);
 			}
 		}
+	}
+	private int getLimit(int r, int c) {
+		int lim = 0;
+		if (board[r][c].isAnchor == 'l' && c > 0) {
+			c--;
+			lim++;
+		}
+		while (c > 0 && board[r][c-1].isAnchor != 'h') {
+			lim++;
+			c--;
+		}
+		if (lim > rack.size()) {
+			lim = rack.size();
+		}
+		return lim;
+	}
+	
+	private void findUp(String s, Node n, int r, int c, int lim) {
+		findDown(s, n, r, c);
+		if (lim > 0) {
+			for (Node e : n.children.values()) {
+				if (rack.contains(e.c)) {
+					rack.remove(new Character(e.c));
+					findUp(s+e.c, e, r, c, lim-1);
+					rack.add(new Character(e.c));
+				} else if (rack.contains('$')) {
+					rack.remove(new Character('$'));
+					findUp(s+e.c, e, r, c, lim-1);
+					rack.add(new Character('$'));
+				}
+			}
+		}
+	}
+	private void findDown(String s, Node n, int r, int c) {
+		if (r >= board.length || r < 0) {
+			return;
+		}
+		if (board[r][c].c == ' ') {
+			if (n.children.containsKey('*') && !found.contains(s)) {
+				found.add(s);
+			}
+			for (Node e : n.children.values()) {
+				if (rack.contains(e.c) && crossCheckX(r, c, e.c)) {
+					rack.remove(new Character(e.c));
+					findDown(s+e.c, e, r+1, c);
+					rack.add(new Character(e.c));
+				} else if (rack.contains('$') && crossCheckX(r, c, e.c)) {
+					rack.remove(new Character('$'));
+					findDown(s+e.c, e, r+1, c);
+					rack.add(new Character('$'));
+				}
+			}
+			for (int rq = 0; rq < board.length; rq++) {
+				for (int cq = 0; cq < board[rq].length; cq++) {
+					board[rq][cq].c = tempBoard[rq][cq].c;
+					board[rq][cq].isAnchor = tempBoard[rq][cq].isAnchor;				
+				}
+			}
+		} else {
+			char l = board[r][c].c;
+			if (n.children.containsKey(l)) {
+				findDown(s+l, n.children.get(l), r+1, c);
+			}
+		}
+	}
+	private int getLimitX(int r, int c) {
+		int lim = 0;
+		if (board[r][c].isAnchor == 'l' && r > 0) {
+			r--;
+			lim++;
+		}
+		while (r > 0 && board[r-1][c].isAnchor != 'v') {
+			lim++;
+			r--;
+		}
+		if (lim > rack.size()) {
+			lim = rack.size();
+		}
+		return lim;
+	}
+
+	public boolean crossCheckX(int r, int c, char ch) {
+		int row = r, col = c;
+		board[r][c].c = ch;
+		if (c - 1 >= 0 && c + 1 < board.length && board[r][c-1].c == ' ' && board[r][c+1].c == ' ') {
+			return true;
+		}
+		while (col >= 0 && board[r][col].c != ' ') {
+			col--;
+		}
+		col += 1;
+		String s = "";
+
+		while (col < board.length && board[r][col].c != ' ') {
+			s += board[r][col].c;
+			col++;
+		}
+		board[row][c].c = ' ';
+		return wordList.contains(s);
+	}
+
+	public int getScore(int r, int c, int score, char e) {
+		int type = board[r][c].multi;
+		int tval = 1;
+		char value = e;
+		switch (value) {
+		case '$':
+			break;
+		case 'E':
+		case 'A':
+		case 'I':
+		case 'O':
+		case 'N':
+		case 'R':
+		case 'T':
+		case 'L':
+		case 'S':
+		case 'U':
+			tval = 1;
+			break;
+		case 'D':
+		case 'G':
+			tval = 2;
+			break;
+		case 'B':
+		case 'C':
+		case 'M':
+		case 'P':
+			tval = 3;
+			break;
+		case 'F':
+		case 'H':
+		case 'V':
+		case 'W':
+		case 'Y':
+			tval = 4;
+			break;
+		case 'K':
+			tval = 5;
+			break;
+		case 'J':
+		case 'X':
+			tval = 8;
+			break;
+		case 'Q':
+		case 'Z':
+			tval = 10;
+			break;
+		default:
+			tval = 0;
+		}
+		int newScore = 0;
+		if (type == 1) {
+			newScore = score+tval*2;
+		}
+		if (type == 2) {
+			newScore =  score+tval*3;
+		}
+		if (type == 3) {
+			newScore = (score + tval)*2;
+		}
+		if (type == 4) {
+			newScore = (score + tval)*3;
+		}
+		return newScore;
 	}
 	public boolean crossCheck(int r, int c, char ch) {
 		int row = r;
 		char temp = board[r][c].c;
 		board[r][c].c = ch;
-		if (r-1 >= 0 && r+1 < board.length && board[r-1][c].c == ' ' && board[r+1][c].c == ' ') {
+		if (r - 1 >= 0 && r + 1 < board.length && board[r - 1][c].c == ' ' && board[r + 1][c].c == ' ') {
 			return true;
 		}
 		while (row >= 0 && board[row][c].c != ' ') {
 			row--;
 		}
-		row+= 1;
 		String s = "";
-		
+
 		while (row < board.length && board[row][c].c != ' ') {
 			s += board[row][c].c;
 			row++;
 		}
 		board[r][c].c = temp;
-		
 		return wordList.contains(s);
 	}
+
 	public void populate() {
 		try {
-			Scanner in = new Scanner(new File("dictionary.txt"));
+			Scanner in = new Scanner(new File("Word_Hunt_SF/dictionary.txt"));
 			while (in.hasNext()) {
 				String str = in.next();
 				wordList.add(str);
@@ -174,6 +399,7 @@ public class Scrabble {
 			e.printStackTrace();
 		}
 	}
+
 	public void addWord(String s, Node n) {
 		if (s.length() == 0) {
 			n.children.put('*', new Node('*'));
@@ -188,41 +414,55 @@ public class Scrabble {
 			addWord(s.substring(1, s.length()), n.children.get(c));
 		}
 	}
+
 	private boolean isAnchor(int r, int c) {
 		if (board[r][c].c != ' ') {
-			return false;
+			board[r][c].isAnchor = 'l';
+			return true;
 		}
-		for (int i = -1; i < 1; i ++) {
+		for (int i = -1; i <= 1; i ++) {
 			if (r+i >= board.length || r+i <0) {
 				continue;
 			}
-			for (int j = -1; j < 1; j ++) {
-				if (c+j >= board.length || c+j <0) {
-					continue;
-				}
-				if (board[r+i][c+j].c != ' ') {
-					board[r][c].isAnchor = true;
-					return true;
-				}
+			if (board[r+i][c].c != ' ') {
+				board[r][c].isAnchor = 'v';
+				return true;
+			}
+		}
+		for (int j = -1; j <= 1; j ++) {
+			if (c+j >= board.length || c+j <0) {
+				continue;
+			}
+			if (board[r][c+j].c != ' ') {
+				board[r][c].isAnchor = 'h';
+				return true;
 			}
 		}
 		return false;
 	}
 	Node root;
+
 	private class Tile {
 		char c;
+		int multi;
+
 		public Tile(char c) {
 			this.c = c;
+			this.multi = -1;
 		}
+
 		@Override
 		public String toString() {
-			return "["+this.c+"]";
+			return "[" + (this.c != ' '? this.c: (this.isAnchor == 'v' || this.isAnchor == 'h' || this.isAnchor == 'l')? this.isAnchor : this.multi == -1? ' ': ""+this.multi) + "]";
 		}
-		boolean isAnchor = false;
+
+		char isAnchor = 'n';
 	}
+
 	private class Node {
 		public char c;
 		public TreeMap<Character, Node> children;
+
 		public Node(char c) {
 			this.c = c;
 			this.children = new TreeMap<>();
